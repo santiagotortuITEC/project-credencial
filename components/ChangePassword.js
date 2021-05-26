@@ -7,19 +7,20 @@ import { API_URL } from "../config";
 export default function changePassword ({ route, navigation }) {
 
   const [dataUser, setDataUser] = useState({  
-    email: ''  
-    //email: 's.tortu@itecriocuarto.org.ar'  
+    email: ''  ,
   });
-  const { email } = dataUser;
+  const { email, dni } = dataUser;
   const [validateEmail, setValidateEmail] = useState({  state: true, msg: "" }); 
+  const [validateDni, setValidateDni] = useState({  state: true, msg: "" }); 
   const [disabled, setDisabled] = useState(false);
 
   let clickSend = () => {
     setDisabled(true)
-
+    let _email = email.trim()
+    let _dni = dni.trim()
     // Validar EMAIL
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ ; 
-    if(reg.test(email) === false) { 
+    if(reg.test(_email) === false) { 
       // Ivalido 
       setValidateEmail({ msg: "Email inválido", state: false })  
       setDisabled(false)
@@ -29,14 +30,36 @@ export default function changePassword ({ route, navigation }) {
       // Valido  
       setValidateEmail({ msg: false, state: true })
     }  
+
+     
+    // validar dni
+    let regDni = /^-{0,1}\d*\.{0,1}\d+$/ ;
+    if(regDni.test(_dni) === false) { 
+      // Ivalido
+      setValidateDni({ msg: "Dni inválido.", state: false }) 
+      setDisabled(false)
+      return null;
+    } else { 
+      // Valido  
+      if (_dni.length > 6) { 
+        setValidateDni({ msg: false, state: true }) 
+      }else{
+        // inválido
+        setValidateDni({ msg: "Demasiado corto. Ingrese un número válido", state: false }) 
+        setDisabled(false)
+        return null;
+
+      }
+    } 
+      
           
-    // Post send-email
+    // Post send-email 
     fetch(`http://64.225.47.18:8080/send-email`, {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({'email':email}),
+      body: JSON.stringify({'email':_email,'dni':_dni}),
     })
     .then(response => response.json())
     .then(data => {
@@ -52,8 +75,8 @@ export default function changePassword ({ route, navigation }) {
       } else {
         // error
         Alert.alert(
-          "Email no encontrado",
-          "Ingrese el email que utilizó para registrarse."  
+          "Usuario no encontrado",
+          "Ingrese los datos que utilizó para registrarse."  
         ); 
         setDisabled(false);
       }
@@ -83,9 +106,24 @@ export default function changePassword ({ route, navigation }) {
               'email': email,
             })
           } 
+          />
+        {  validateEmail.state ? null : <Text style={ globalStyles.msgError}> {validateEmail.msg} </Text>}
+        <Text style={globalStyles.h4}>Ingrese el dni del usuario.</Text>
+        <TextInput  
+          style={ globalStyles.inputStyle}
+          placeholder="Dni"
+          maxLength={9}
+          value={ dni}
+          name="dni"
+          onChangeText={       (dni) =>
+            setDataUser({
+              ...dataUser,
+              'dni': dni,
+            })
+          } 
           /> 
         
-        {  validateEmail.state ? null : <Text style={ globalStyles.msgError}> {validateEmail.msg} </Text>}
+        {  validateDni.state ? null : <Text style={ globalStyles.msgError}> {validateDni.msg} </Text>}
 
         <View style={ styles.button }>
           <Button 

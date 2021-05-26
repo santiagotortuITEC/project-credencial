@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sindicato de la carne",
     "slug": "credencial",
-    "version": "4.0.0",
+    "version": "8.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "splash": {
@@ -18,7 +18,7 @@
     ], 
     "android": {
       "permissions" : ["CAMERA"],
-      "versionCode": 4,
+      "versionCode": 8,
       "adaptiveIcon": { 
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#FFFFFF"
