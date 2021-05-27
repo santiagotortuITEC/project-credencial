@@ -58,12 +58,12 @@ export default function App({ navigation }) {
       const value = await AsyncStorage.getItem('veces')
       if(value !== null) {
         // value previously stored
-        console.log('value Man: ', value)
+        //console.log('value : ', value)
         return value;
       }
     } catch(e) {
       // error reading value
-      console.log('error en APP Man: ')
+      console.log('error en APP : ')
 
     }
   }
@@ -130,6 +130,7 @@ export default function App({ navigation }) {
       // screen will be unmounted and thrown away.
       let veces = await getData();
       storeData(Number(veces)+1);
+      console.log('veces: ',veces);
       if (veces > 9) {
         authContext.signOut();
         storeData(0);
@@ -149,7 +150,7 @@ export default function App({ navigation }) {
         // After getting token, we need to persist the token using `AsyncStorage`
         // In the example, we'll use a dummy token
 
-        console.log('SignIn Data: ',data)
+        //console.log('SignIn Data: ',data)
 
         dispatch({ type: 'SIGN_IN', token: JSON.stringify(data) });
       },

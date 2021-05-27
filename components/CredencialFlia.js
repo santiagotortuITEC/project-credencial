@@ -1,7 +1,8 @@
  
 import React, { useState } from 'react';
 import {  Dimensions,  StyleSheet, Text, View, Image } from 'react-native';  
-import { API_URL } from "../config";
+import { url } from "../config/url_api"; 
+import ReactNativeZoomableView from '@dudigital/react-native-zoomable-view/src/ReactNativeZoomableView';
 
 
 export default function Credencial ({route, navigation}) {
@@ -19,7 +20,7 @@ export default function Credencial ({route, navigation}) {
   } = route.params; 
    
   React.useEffect(() => { 
-    fetch(`http://64.225.47.18:8080/pdf417/${documentoPersona}`).then(response => {
+    fetch(`${url}pdf417/${documentoPersona}`).then(response => {
       const contentType = response.headers.get('content-type'); 
       return response.json();
     })
@@ -31,15 +32,10 @@ export default function Credencial ({route, navigation}) {
     );
   },[])
 
-
-  function getParsedDate(date){
-    date = String(date).split(' ');
-    var days = String(date[0]).split('-');
-    var hours = String(date[1]).split(':');
-    return [parseInt(days[0]), parseInt(days[1])-1, parseInt(days[2]), parseInt(hours[0]), parseInt(hours[1]), parseInt(hours[2])];
-  }
-  let fecha = getParsedDate(fingresoAfiliado) 
-  let fechaIngreso = `${fecha[2]}/${fecha[1]}/${fecha[0]}`;   
+  // Ordenar fecha
+  let soloFecha = fingresoAfiliado.split("T");
+  let ordenarFecha = soloFecha[0].split("-"); 
+  let fechaIngreso = `${ordenarFecha[2]}/${ordenarFecha[1]}/${ordenarFecha[0]}`;   
 
   let parentesco = '';
 
@@ -64,7 +60,8 @@ export default function Credencial ({route, navigation}) {
   let paddingPercent = (windowWidth / 100) * 11;
   let paddingTextPercent = (windowWidth / 100) * 2;
 
-  // //console.log('----: ' );
+    // console.log('windowWidth: ', windowWidth/2.5 );
+    // console.log('windowHeight: ', windowHeight/8 );
 
   //console.log(`W = ${windowWidth} - ${widthPercent}%`) 
   //console.log(`H = ${windowHeight} - ${heightPercent}%`)  
@@ -81,46 +78,66 @@ export default function Credencial ({route, navigation}) {
   
   */ 
 
-  
+  let logOutZoomState = (event, gestureState, zoomableViewEventObject) => {
+    console.log('');
+    console.log('');
+    console.log('-------------');
+    console.log('Event: ', event);
+    console.log('GestureState: ', gestureState);
+    console.log('ZoomableEventObject: ', zoomableViewEventObject);
+    console.log('');
+    console.log(`Zoomed from ${zoomableViewEventObject.lastZoomLevel} to  ${zoomableViewEventObject.zoomLevel}`);
+  }
   return (
+ 
+    <ReactNativeZoomableView
+      maxZoom={1.5}
+      minZoom={0.5}
+      zoomStep={0.5}
+      initialZoom={1}
+      bindToBorders={true}
+      onZoomAfter={()=>logOutZoomState} 
+    >
 
-    <View style={ styles.container }>   
-    <View style={ {marginTop:0} }>
-        <View style={   { height:windowWidth, width:windowHeight },styles.card    }> 
+      <View style={ styles.container }>   
+      <View style={ {marginTop:0} }>
+          <View style={   { height:windowWidth, width:windowHeight },styles.card    }> 
 
-            <Image
-              style={{height:widthPercent , width:heightPercent-heightPercent/10}}
-              source={require('../assets/images/afi-adherente-header.png')}
-              />  
-
-            <View style={   {marginTop:paddingTextPercent, marginBottom:paddingTextPercent, marginLeft:paddingTextPercent*3 }    }> 
-              <Text style={styles.text} > AFILIADO: { nombrePersona } </Text>
-              <Text style={styles.text} > AFILIADO TITULAR: {nombrePersonaTitular} </Text>
-              <Text style={styles.text} > EMPRESA: {rs_emp} </Text>
-              <Text style={styles.text} > F. INGRESO: {fechaIngreso} </Text>
-              <Text style={styles.text} > N॰ DE AFILIADO:  {numAfiliado} </Text>   
-              <Text style={styles.text} > D.N.I: {documentoPersona} </Text>
-              <Text style={styles.text} > PARENTESCO: {parentesco} </Text>
-            </View>
-
-            <View style={styles.footer}>
               <Image
-                style={{height:widthPercent, width:heightPercent-heightPercent/10}}
-                source={require('../assets/images/afi-titular-footer.png')}
+                style={{height:widthPercent , width:heightPercent-heightPercent/10}}
+                source={require('../assets/images/afi-adherente-header.png')}
                 />  
-            </View>
-        </View>  
-        <View style={styles.ubicacionPdf417}> 
-        
-              <View style={ {marginLeft:windowWidth/4,marginBottom:-windowWidth/5} }>
-                <Text style={styles.textPdf417} > Identificarse: </Text>
-                <Image style={ {width: windowWidth/2.5, height:windowHeight/8} } source={{uri: imgPdf417}}/>
+
+              <View style={   {marginTop:paddingTextPercent, marginBottom:paddingTextPercent, marginLeft:paddingTextPercent*3 }    }> 
+                <Text style={styles.text} > AFILIADO: { nombrePersona } </Text>
+                <Text style={styles.text} > AFILIADO TITULAR: {nombrePersonaTitular} </Text>
+                <Text style={styles.text} > EMPRESA: {rs_emp} </Text>
+                <Text style={styles.text} > F. INGRESO: {fechaIngreso} </Text>
+                <Text style={styles.text} > N॰ DE AFILIADO:  {numAfiliado} </Text>   
+                <Text style={styles.text} > D.N.I: {documentoPersona} </Text>
+                <Text style={styles.text} > PARENTESCO: {parentesco} </Text>
               </View>
+
+              <View style={styles.footer}>
+                <Image
+                  style={{height:widthPercent, width:heightPercent-heightPercent/10}}
+                  source={require('../assets/images/afi-titular-footer.png')}
+                  />  
+              </View>
+          </View>  
+          <View style={styles.ubicacionPdf417}> 
+          
+                <View style={ {marginLeft:windowWidth/8,marginBottom:-windowWidth/6} }>
+                  <Text style={styles.textPdf417} > Identificarse: </Text>
+                  <Image style={ {width: 178, height: 82} } source={{uri: imgPdf417}}/>
+                </View>
+                  
                 
-              
+            </View>
           </View>
-        </View>
-    </View>
+      </View>
+    </ReactNativeZoomableView>
+
   ); 
     
 }
@@ -146,10 +163,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,  
   },  
   textPdf417: { 
-    fontSize: 12,
+    fontSize: 9,
     color:'#000',  
-    marginTop: 2,  
-    marginBottom: 2,  
+    marginTop: 3 ,  
+    marginBottom: 0,   
   },  
   footer: {     
     alignItems: 'center',

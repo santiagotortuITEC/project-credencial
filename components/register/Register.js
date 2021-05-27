@@ -2,12 +2,17 @@
 import React, { useState } from 'react';
 import { StyleSheet, Button, Text, View, TextInput, ScrollView, Alert } from 'react-native';  
 import { globalStyles } from '../styles/global';
-import { API_URL } from "../../config";
+import { url } from "../../config/url_api"; 
 
 export default function Register ({ route, navigation }) {  
     // Desde Scanner.js vienen las siguientes variables: 
     const { idpersona, parentesco, sexoScan, fnacScan, nombreScan, apellidoScan, dniScan, cuilScan } = route.params;
- 
+    // Format fnac para la BD
+    let dia = fnacScan.substring(0,2)
+    let mes = fnacScan.substring(3,5)
+    let anio = fnacScan.substring(6)
+    let fnac = `${anio}-${mes}-${dia}` 
+  
     // Estado datos del formulario
     const [dataUser, setDataUser] = useState({  
         email: '',
@@ -36,17 +41,18 @@ export default function Register ({ route, navigation }) {
     const [validatePassword, setValidatePassword] = useState({  state: true, msg: "" }); 
     const [validatePasswordRepeat, setValidatePasswordRepeat] = useState({  state: true, msg: "" });  
     const [validateAll, setValidateAll] =  useState({  state: true, msg: "" });   
- 
-    // Estados para user(afiliado) activo (2)
-    const [userActive, setUserActive] =  useState('');  
-    const [loadUseAct, setLoadUseAct] =  useState(false);   
-
-
-    
+  
 
     let clickSend = () => {
       setDisabled(true)
-       
+
+      // Quitar espacios en blanco 
+      let _email = email.trim();
+      let _cellphone = cellphone.trim();
+      let _username = username.trim(); 
+      let _password = password.trim(); 
+      let _passwordRepeat = passwordRepeat.trim(); 
+
       // TODOS LOS CAMPOS COMPLETOS
       if (  
         email.trim() === "" ||
@@ -69,7 +75,7 @@ export default function Register ({ route, navigation }) {
 
       // EMAIL
       let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ ; 
-      if(reg.test(email) === false) { 
+      if(reg.test(_email) === false) { 
         // Ivalido 
         setValidateEmail({ msg: "Email inválido", state: false })  
         setDisabled(false)
@@ -90,14 +96,14 @@ export default function Register ({ route, navigation }) {
  
       // CELLPHONE
       let regCellphone = /^-{0,1}\d*\.{0,1}\d+$/ ;
-      if(regCellphone.test(cellphone) === false) { 
+      if(regCellphone.test(_cellphone) === false) { 
         // Ivalido
         setValidateCellphone({ msg: "Celular inválido.", state: false }) 
         setDisabled(false)
         return null;
       } else { 
         // Valido  
-        if (cellphone.length > 5) { 
+        if (_cellphone.length > 5) { 
           setValidateCellphone({ msg: false, state: true }) 
         }else{
           // inválido
@@ -115,10 +121,10 @@ export default function Register ({ route, navigation }) {
       
       // USERNAME
       let regUsername = /^[\w\.@]{5,100}$/;
-      if(regUsername.test(username) === false) { 
+      if(regUsername.test(_username) === false) { 
         // Ivalido
           setValidateUsername({
-            msg: "Nombre de usuario demasiado corto.",
+            msg: "Nombre de usuario inválido.",
             state: false
           })
           setDisabled(false);
@@ -141,17 +147,17 @@ export default function Register ({ route, navigation }) {
         // PASSWORD
         let regPassword = /\s/;   // espacios en blanco 
         // si regPassword es TRUE quiere decir la clave esta mal
-        if (regPassword.test(password)) { 
+        if (regPassword.test(_password)) { 
           setValidatePassword({ msg: "Contraseña inválida.", state: false })
           setDisabled(false)
           return null;
         }
-        else if (password.length < 5) { 
+        else if (_password.length < 5) { 
           setValidatePassword({ msg: "Contraseña demasiado corta.", state: false })
           setDisabled(false)
           return null;
         }
-        else if (password !== passwordRepeat) {
+        else if (_password !== _passwordRepeat) {
           // Invalida: passwordRepeat
           setValidatePasswordRepeat({ msg: "Las contraseñas no coinciden.", state: false }) 
           setDisabled(false)
@@ -179,17 +185,17 @@ export default function Register ({ route, navigation }) {
 
 
 
-
         let dataRegister  = {
-          'nom_usu': username,
-          'con_usu': password,
+          'nom_usu': _username,
+          'con_usu': _password,
           'id_tusu': 6, 
           'nombre': nombreScan, 
           'apellido': apellidoScan, 
           'cuil': cuilScan, 
-          'celular': cellphone, 
-          'mail': email,
+          'celular': _cellphone, 
+          'mail': _email,
           'idPersona': idpersona,  
+          'fnac': fnac
           //'dni':dniScan
         }
         
@@ -199,7 +205,7 @@ export default function Register ({ route, navigation }) {
           setTimeout(() => {
             
             // Post a usuario y Put a persona
-            fetch(`http://64.225.47.18:8080/registrar`, {
+            fetch(`${url}registrar`, {
               method: 'POST', // or 'PUT'
               headers: {
                 'Content-Type': 'application/json',
@@ -264,7 +270,7 @@ export default function Register ({ route, navigation }) {
             style={ globalStyles.inputStyle}
             placeholder="Email"
             value={ email}
-            maxLength={50}
+            maxLength={65}
             name="email"
             onChangeText={       (email) =>
                 setDataUser({

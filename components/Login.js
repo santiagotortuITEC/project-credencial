@@ -1,20 +1,30 @@
  
-import React, { useState } from 'react';
-import { StyleSheet, Button, Text, View, TextInput, ScrollView, TouchableHighlight } from 'react-native';  
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Button, Text, View, TextInput, ScrollView, TouchableHighlight, Alert , Switch} from 'react-native';  
 import { globalStyles } from './styles/global'; 
 import { AuthContext } from "./utils";
 import AsyncStorage from '@react-native-async-storage/async-storage';  
-import { API_URL } from "../config"; 
+import { url } from "../config/url_api"; 
+import ToggleSwitch from "toggle-switch-react-native";
 
 export default function Login({ route, navigation }) {  
-  //console.log('---> ',API_URL)
+  //console.log('---> ',url)
   const { signIn } = React.useContext(AuthContext);
-   
+  
   const storeData = async (value) => {
+    let infoLogin = {    
+      username: username,
+      password: password,      
+    }
     try {
-      await AsyncStorage.setItem('veces', value.toString())
-      //console.log('Bien AsyncStorage:')
+      await AsyncStorage.setItem('veces', value.toString()) 
 
+      if (rememberMe) {
+        AsyncStorage.setItem('infoLogin', JSON.stringify(infoLogin)) 
+      } else {
+        AsyncStorage.setItem('infoLogin', '') 
+      }
+  
     } catch (e) {
       // saving error
       //console.log('Error AsyncStorage:')
@@ -25,14 +35,34 @@ export default function Login({ route, navigation }) {
     username: '',
     password: '',      
   }); 
+  const [rememberMe, setRememberMe] = useState(true);
+
   const [validateUsername, setValidateUsername] = useState(true);
   const [validatePassword, setValidatePassword] = useState(true); 
   const [loadDataRegister, setLoadDataRegister] = useState(true); 
   const [validateAll, setValidateAll] =  useState({  state: false, msg: "" });   
  
+  
+  useEffect(()=>{ 
+    getUsernameAsyncStorage();
+  },[]) 
+
+  const getUsernameAsyncStorage = async () => {
+    // Function to get the value from AsyncStorage
+    await AsyncStorage.getItem('infoLogin').then(
+      (dataLogin) =>  
+        dataLogin ?          
+          setDataUser({ 
+            'username': JSON.parse(dataLogin).username,
+            'password': JSON.parse(dataLogin).password
+          })
+        : null
+    ); 
+  }; 
  
   let clickSend = () => { 
-
+ 
+ 
     // Validaciones
     if (   username.trim() === "" ||  password.trim() === ""  ) {
         setValidateUsername(false)
@@ -45,18 +75,19 @@ export default function Login({ route, navigation }) {
       
       setValidateAll({ state:true, msg:false})    
 
-      fetch(`http://64.225.47.18:8080/login/${username}/${password}`).then(response => {
+      fetch(`${url}afiliadoactivo/${username}`).then(response => {
         const contentType = response.headers.get('content-type'); 
         return response.json();
       })
       .then(data => { 
-        //console.log('data-   ',data)
-        if(data.response.length === 1) {
-
-          setValidateAll({ state:false, msg:data.response[0]})      
-        } else { 
-          signIn(data.response[1][0])
-          storeData(0)        
+        if(data.response){
+          // Sigue activo, puede ingresar
+          sendLogin();
+        } else {
+          Alert.alert(
+            "Atención",
+            "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."  
+          ); 
         }
       })
       .catch(error => console.error(error),
@@ -70,6 +101,28 @@ export default function Login({ route, navigation }) {
     
     
   }
+
+  const sendLogin = () => {
+    fetch(`${url}login/${username}/${password}`).then(response => {
+      const contentType = response.headers.get('content-type'); 
+      return response.json();
+    })
+    .then(data => { 
+      //console.log('data-   ',data)
+      if(data.response.length === 1) {
+
+        setValidateAll({ state:false, msg:data.response[0]})      
+      } else { 
+        signIn(data.response[1][0]);
+        // Siguientes parametros: 
+        // 0: para contar los inicios, y el resto para 'guardar' la sesion
+        storeData(0,username,password);  
+      }
+    })
+    .catch(error => console.error(error),
+      setValidateAll({ state:false, msg:" "})      
+    );
+  };
 
   const { 
     username,
@@ -92,7 +145,7 @@ export default function Login({ route, navigation }) {
         placeholder="Nombre de usuario"
         maxLength={20}
         value={ username}
-        name="username"
+        name="username" 
         onChangeText={       (username) =>
           setDataUser({
             ...dataUser,
@@ -111,7 +164,7 @@ export default function Login({ route, navigation }) {
         value={ password}
         maxLength={15}
         secureTextEntry={true}
-        name="password"
+        name="password" 
         onChangeText={       (password) =>
           setDataUser({
             ...dataUser,
@@ -124,6 +177,20 @@ export default function Login({ route, navigation }) {
       {  validatePassword ? null : <Text style={ globalStyles.msgError}>Contraseña inválida</Text>}
       {  validateAll.state ? null : <Text style={ globalStyles.msgError}>{validateAll.msg}</Text>}
  
+     
+ 
+      <View style={styles.containerSwitch}>         
+        <ToggleSwitch
+            label="Recordar mis datos"
+            isOn={rememberMe}
+            onToggle={(value) => setRememberMe(value)}
+            onColor="#0474D4"
+            offColor="gray" 
+            labelStyle={{ color: "#043464", fontWeight: "600" }}
+            size="small"
+          />
+      </View>
+
 
       <Button 
         style={ globalStyles.button }
@@ -167,5 +234,9 @@ const styles = StyleSheet.create({
   separator: {
       marginTop: 15
   },
-  
+  containerSwitch: {
+    marginBottom: 22,
+    marginTop: -4,
+    marginLeft: -10
+   },
 });

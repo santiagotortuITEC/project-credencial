@@ -11,9 +11,8 @@ export default function Home({route, navigation}) {
       nombrePersona,  
       nombrePersonaTitular
     } = route.params;
-
-    let indice = nombrePersona.indexOf(" ");
-    let nombreExtraido = nombrePersona.substring(0, indice); 
+     
+    let name = nombrePersona.split(" ");  
     
     const closeSession  = () => {
         Alert.alert('Cerrar sesión', '¿Seguro que desea salir?',
@@ -32,7 +31,7 @@ export default function Home({route, navigation}) {
         <View style={globalStyles.container}>            
                         
         <View style={styles.localContainer}>
-            <Text style={ styles.h1 } > Bienvenido {nombreExtraido}</Text>
+            <Text style={ styles.h1 } > Bienvenido {name[1]}</Text>
             <Image
                 style={styles.image }
                 source={require('../assets/images/logo.png')}

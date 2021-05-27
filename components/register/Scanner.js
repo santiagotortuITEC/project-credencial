@@ -3,7 +3,7 @@
 import React,  { useState, useEffect }  from 'react';
 import { Dimensions, Button, Text, View ,StyleSheet, Alert} from 'react-native'; 
 import { BarCodeScanner } from 'expo-barcode-scanner'; 
-import { API_URL } from "../../config";
+import { url } from "../../config/url_api"; 
 
 const { width } = Dimensions.get('window');
 
@@ -94,7 +94,7 @@ export default function Scanner({ route,navigation }) {
       if (parentesco == 'A') { // Si es afiliado TITULAR...
         //console.log('entre en SI afiliadoflia')
         // Start fetch
-        fetch(`http://64.225.47.18:8080/usuarios/${dni}`).then((response) => {
+        fetch(`${url}usuarios/${dni}`).then((response) => {
           if (response.ok) {
             return response.json();
           } else {
@@ -120,7 +120,7 @@ export default function Scanner({ route,navigation }) {
         })
         .catch((error) => {
           //console.log('Inhabilitado.') 
-          Alert.alert('¿No eres afiliado titular?', 'Si eres familiar del afiliado titular, vuelva hacia atrás.',
+          Alert.alert('¿Eres afiliado titular?', 'No se ha encontrado ningún afiliado titular vinculado con el dni escaneado.',
           [
             {
               text: "Cancelar",
@@ -140,8 +140,7 @@ export default function Scanner({ route,navigation }) {
           //console.log('entre en NO afiliadoflia')
 
           // Start fetch persona - afiliado - usuarioactivo
-          fetch(`http://64.225.47.18:8080/personaAfiliadoUsuario/${dni}`).then((response) => {
-          //fetch(`http://64.225.47.18:8080/personaAfiliadoUsuario/${dni}`).then((response) => {
+          fetch(`${url}personaAfiliadoUsuario/${dni}`).then((response) => { 
             if (response.ok) {
               return response.json();
             } else {
@@ -149,8 +148,21 @@ export default function Scanner({ route,navigation }) {
             }
           })
           .then((responseJson) => {             
-            //console.log('rj--> ',responseJson.response[0].idPersona)
-
+            //console.log('rj--> ',responseJson.response[0])
+            // Aca controlo que un TITULAR inactivo no se registre como familiar...
+            if (responseJson.response[0].estadoAfiliado) {
+              Alert.alert('¿Eres afiliado titular?', 'No puedes registrarte siendo afiliado inactivo.',
+                  [
+                    {
+                      text: "Cancelar",
+                      //onPress: () => this.props.navigation.navigate("nextScreen"), 
+                    },
+                    {text: 'Volver', onPress: () => navigation.navigate("Family") },
+                  ],
+                  {cancelable: false}
+              ) 
+              return;
+            }
             if(responseJson.response[0].idPersona){
               let idpersona = responseJson.response[0].idPersona;
               //console.log('idpersona---> ',idpersona)
