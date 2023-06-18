@@ -1,5 +1,5 @@
 import React  from 'react';
-import { StyleSheet, Button, Text, View, Image, Alert  } from 'react-native';
+import { StyleSheet, Button, Text, View, Image, Alert, Linking  } from 'react-native';
 import { globalStyles } from './styles/global';
 import { AuthContext } from "./utils";
 
@@ -27,6 +27,14 @@ export default function Home({route, navigation}) {
         ) 
     } 
 
+    const openURL = () => {
+        const url = 'http://sindicatocarnerioiv.org.ar/beneficios'; 
+        Linking.openURL(url)
+          .catch((error) => {
+            console.error('Error al abrir la URL: ', error);
+          });
+      };
+
     return (
         <View style={globalStyles.container}>            
                         
@@ -43,8 +51,13 @@ export default function Home({route, navigation}) {
             onPress={() =>  { nombrePersonaTitular ? navigation.navigate('CredencialFlia',route.params) : navigation.navigate('Credencial',route.params) } }
             title="Ver mi credencial"
         /> 
-        <View style={styles.separator} />  
         <View style={styles.separator} />
+        <Button
+            color="#043464"     
+            onPress={openURL}
+            title="Ver mis beneficios"
+        /> 
+        <View style={styles.separator} />  
         <Button
             color="#0474D6"   
             onPress={closeSession}
