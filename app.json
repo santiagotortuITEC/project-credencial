@@ -15,11 +15,13 @@
     },
     "assetBundlePatterns": [
       "**/*"
-    ], 
+    ],
     "android": {
-      "permissions" : ["CAMERA"],
-      "versionCode": 9,
-      "adaptiveIcon": { 
+      "permissions": [
+        "CAMERA"
+      ],
+      "versionCode": 11,
+      "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#FFFFFF"
       },
@@ -27,6 +29,11 @@
     },
     "web": {
       "favicon": "./assets/images/logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d4c20f51-2dcb-460b-b84b-e9360efaed06"
+      }
     }
   }
-} 
+}
