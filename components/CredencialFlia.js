@@ -88,6 +88,10 @@ export default function Credencial ({route, navigation}) {
     console.log('');
     console.log(`Zoomed from ${zoomableViewEventObject.lastZoomLevel} to  ${zoomableViewEventObject.zoomLevel}`);
   }
+
+  const headerImage = require('../assets/images/afi-adherente-header.png');
+  const footerImage = require('../assets/images/afi-titular-footer.png');
+
   return (
  
     <ReactNativeZoomableView
@@ -103,10 +107,11 @@ export default function Credencial ({route, navigation}) {
       <View style={ {marginTop:0} }>
           <View style={   { height:windowWidth, width:windowHeight },styles.card    }> 
 
+            {headerImage &&
               <Image
                 style={{height:widthPercent , width:heightPercent-heightPercent/10}}
-                source={require('../assets/images/afi-adherente-header.png')}
-                />  
+                source={headerImage}
+              />} 
 
               <View style={   {marginTop:paddingTextPercent, marginBottom:paddingTextPercent, marginLeft:paddingTextPercent*3 }    }> 
                 <Text style={styles.text} > AFILIADO: { nombrePersona } </Text>
@@ -119,17 +124,20 @@ export default function Credencial ({route, navigation}) {
               </View>
 
               <View style={styles.footer}>
-                <Image
-                  style={{height:widthPercent, width:heightPercent-heightPercent/10}}
-                  source={require('../assets/images/afi-titular-footer.png')}
-                  />  
+                {footerImage &&
+                  <Image
+                    style={{height:widthPercent, width:heightPercent-heightPercent/10}}
+                    source={footerImage}
+                  />}
               </View>
           </View>  
           <View style={styles.ubicacionPdf417}> 
           
                 <View style={ {marginLeft:windowWidth/8,marginBottom:-windowWidth/6} }>
                   <Text style={styles.textPdf417} > Identificarse: </Text>
-                  <Image style={ {width: 178, height: 82} } source={{uri: imgPdf417}}/>
+                  {imgPdf417 &&
+                    <Image style={ {width: 178, height: 82} } source={{uri: imgPdf417}}/>
+                  }
                 </View>
                   
                 
