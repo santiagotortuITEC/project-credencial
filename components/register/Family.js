@@ -1,15 +1,15 @@
  
 import React, { useState } from 'react';
 import { StyleSheet, Dimensions,Text, View,  ScrollView, Button, ViewBase } from 'react-native';  
-import RNPickerSelect from 'react-native-picker-select';
 import { globalStyles } from '../styles/global'; 
+import { Picker as SelectPicker } from '@react-native-picker/picker';
 
 export default function Family ({ route, navigation }) { 
   
     // Estados
     const [parentesco, setparentesco] =  useState('A');  
     const [msgErrorParentesco, setmsgErrorParentesco] = useState({  state: false, msg: "" }); 
-    
+
     const windowWidth = Dimensions.get('window').width;
     const windowHeight = Dimensions.get('window').height;
     // Click continuar
@@ -34,21 +34,15 @@ export default function Family ({ route, navigation }) {
               <Text style={ globalStyles.h1 } > Registrarte </Text>
 
               <Text style={ globalStyles.h4 }>Se registrara como: </Text>        
-              <RNPickerSelect
-                  style= {globalStyles.inputStyle}   
-                  onValueChange={(value) => setparentesco(value)}
-                  placeholder={{label:'Seleccionar...'}}
-                  value={'A'}
-                  items={[
-                    { label: 'Afiliado titular', value: 'A' }, 
-                    // { label: 'Hijo del afiliado', value: 'H' },
-                    // { label: 'Esposa del afiliado', value: 'E' },
-                    // { label: 'Concubino del afiliado', value: 'C' },
-                    // { label: 'Nieto del afiliado', value: 'N' },
-                    // { label: 'Otro', value: 'N/D' },
-                    { label: 'Familiar del afiliado', value: 'B' }, 
-                  ]}
-                  />
+              <SelectPicker
+                selectedValue={parentesco}
+                style={globalStyles.inputStyle}
+                onValueChange={(itemValue) =>
+                  setparentesco(itemValue)
+                }>
+                <SelectPicker.Item label="Afiliado titular" value="A" />
+                <SelectPicker.Item label="Familiar del afiliado" value="B" />
+              </SelectPicker>
   
                 {  msgErrorParentesco.state ? <Text style= {globalStyles.msgError}> {msgErrorParentesco.msg} </Text> : null}
                   
