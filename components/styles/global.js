@@ -85,6 +85,30 @@ export const globalStyles = StyleSheet.create({
     },
     buttonPosition: {
       marginBottom: 25
-    }
+    },
+    buttonLoginContainer: {
+      width: '100%',
+      height: 40,
+      marginTop: 10,
+      marginBottom: 10,
+      backgroundColor: '#043464',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      alignItems: 'center'
+    },
+    buttonLoginContainerDisabled: {
+      width: '100%',
+      height: 40,
+      marginTop: 10,
+      marginBottom: 10,
+      backgroundColor: '#ccc',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      alignItems: 'center'
+    },
+    buttonLoginText: {
+      color: '#fff',
+      fontSize: 15
+    },
   });
  

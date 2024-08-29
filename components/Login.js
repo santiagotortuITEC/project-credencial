@@ -1,6 +1,6 @@
  
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Button, Text, View, TextInput, ScrollView, TouchableHighlight, Alert , Switch} from 'react-native';  
+import { StyleSheet, Button, Text, View, TextInput, ScrollView, TouchableHighlight, Alert, TouchableOpacity} from 'react-native';  
 import { globalStyles } from './styles/global'; 
 import { AuthContext } from "./utils";
 import AsyncStorage from '@react-native-async-storage/async-storage';  
@@ -39,9 +39,12 @@ export default function Login({ route, navigation }) {
 
   const [validateUsername, setValidateUsername] = useState(true);
   const [validatePassword, setValidatePassword] = useState(true); 
-  const [loadDataRegister, setLoadDataRegister] = useState(true); 
+
+  const [isLoading, setIsLoading] = useState(false); 
+
   const [validateAll, setValidateAll] =  useState({  state: false, msg: "" });   
- 
+  
+  let loginButtonStyles = isLoading ? globalStyles.buttonLoginContainerDisabled : globalStyles.buttonLoginContainer;
   
   useEffect(()=>{ 
     getUsernameAsyncStorage();
@@ -60,22 +63,18 @@ export default function Login({ route, navigation }) {
     ); 
   }; 
  
-  let clickSend = () => { 
- 
- 
+  let clickSend = async () => {   
     // Validaciones
-    if (   username.trim() === "" ||  password.trim() === ""  ) {
-        setValidateUsername(false)
-        setValidatePassword(false) 
+    if (username?.trim() === "" || password?.trim() === "") {
+      setValidateUsername(false)
+      setValidatePassword(false) 
     }
     
-
-
-    if (validatePassword && validateUsername){
-      
+    if (username.length > 0 && password.length > 0) {
       setValidateAll({ state:true, msg:false})    
-
-      fetch(`${url}afiliadoactivo/${username}`).then(response => {
+      
+      setIsLoading(true);
+      await fetch(`${url}afiliadoactivo/${username}`).then(response => {
         const contentType = response.headers.get('content-type'); 
         return response.json();
       })
@@ -92,7 +91,8 @@ export default function Login({ route, navigation }) {
       })
       .catch(error => console.error(error),
         setValidateAll({ state:false, msg:" "})      
-      );
+      )
+      .finally(() => setIsLoading(false));
 
     }else{ 
       setValidateAll({ state:false, msg:"Hay campos incorrectos."})
@@ -102,8 +102,8 @@ export default function Login({ route, navigation }) {
     
   }
 
-  const sendLogin = () => {
-    fetch(`${url}login/${username}/${password}`).then(response => {
+  const sendLogin = async () => {
+    await fetch(`${url}login/${username}/${password}`).then(response => {
       const contentType = response.headers.get('content-type'); 
       return response.json();
     })
@@ -192,12 +192,14 @@ export default function Login({ route, navigation }) {
       </View>
 
 
-      <Button 
-        style={ globalStyles.button }
-        color="#043464" 
-        onPress={() => { clickSend() }}  
-          title="Ingresar"    
-      ></Button>
+      <TouchableOpacity 
+        onPress={clickSend} 
+        disabled={isLoading}
+        style={loginButtonStyles}>
+        <Text style={globalStyles.buttonLoginText}> 
+          {isLoading ? "Ingresando..." : "Ingresar"} 
+        </Text>
+      </TouchableOpacity>
 
       <TouchableHighlight
         onPress={() => navigation.navigate('ChangePassword')}
