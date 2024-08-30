@@ -59,22 +59,28 @@ export default function Login({ navigation }) {
         : null
     ); 
   }; 
- 
+
 
   const checkIfUserIsActive = async (username) => {
     try {
       const response = await fetch(`${url}afiliadoactivo/${username}`);
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.message || 'Error verificando el usuario activo');
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType) throw new TypeError("Oops, we haven't got a valid content type!");
+      
+      const data = await response.text();
+      const dataParsed = data ? JSON.parse(data) : {};
+      
+      if (dataParsed.response) {
+        return dataParsed.response;
+      } else {
+        throw new Error(response.message || 'Error verificando el usuario activo')
       }
-  
-      return data.response;
+
     } catch (error) {
-      setValidateAll({ state: false, msg: "Ha ocurrido un problema" });
-      throw error;
-    }
+      setValidateAll({ state: false, msg: 'Ha ocurrido un problema' });
+      setIsLoading(false);
+    };
   };
   
   const sendLogin = async () => {
@@ -99,6 +105,7 @@ export default function Login({ navigation }) {
       setValidateAll({ state: false, msg: "Ha ocurrido un error" });
     } finally {
       setIsLoading(false);
+      return;
     }
   };
   
@@ -114,16 +121,22 @@ export default function Login({ navigation }) {
     setValidateAll({ state: true, msg: false });
     
     setIsLoading(true);
-    const isActive = await checkIfUserIsActive(username);
-    if (isActive) {
-      sendLogin();
-    } else {
+    try {
+      const isActive = await checkIfUserIsActive(username);
+      if (isActive) {
+        await sendLogin();
+      } else {
+        setIsLoading(false);
+        Alert.alert(
+            "Atención",
+            "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
+          );
+        }
+    } catch (error) {
+      setValidateAll({ state: false, msg: "Ha ocurrido un problema." });
+    } finally {
       setIsLoading(false);
-      Alert.alert(
-          "Atención",
-          "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
-        );
-      }
+    }
   };
 
   const { 
