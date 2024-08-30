@@ -64,7 +64,6 @@ export default function Login({ navigation }) {
   const checkIfUserIsActive = async (username) => {
     try {
       const response = await fetch(`${url}afiliadoactivo/${username}`);
-      console.log('response: ', response);
       const data = await response.json();
   
       if (!response.ok) {
@@ -81,7 +80,6 @@ export default function Login({ navigation }) {
   const sendLogin = async () => {
     try {
       const response = await fetch(`${url}login/${username}/${password}`);
-      console.log('Response received:', response);
   
       const contentType = response.headers.get('content-type');
       if (!contentType) {
@@ -98,8 +96,9 @@ export default function Login({ navigation }) {
         storeData(0, username, password);
       }
     } catch (error) {
-      console.error('Error during login:', error);
       setValidateAll({ state: false, msg: "Ha ocurrido un error" });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -113,25 +112,18 @@ export default function Login({ navigation }) {
     }
   
     setValidateAll({ state: true, msg: false });
+    
     setIsLoading(true);
-  
-    try {
-      const isActive = await checkIfUserIsActive(username);
-  
-      if (isActive) {
-        // Sigue activo, puede ingresar
-        await sendLogin();
-      } else {
-        Alert.alert(
+    const isActive = await checkIfUserIsActive(username);
+    if (isActive) {
+      sendLogin();
+    } else {
+      setIsLoading(false);
+      Alert.alert(
           "Atención",
           "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
         );
       }
-    } catch (error) {
-      setValidateAll({ state: false, msg: "Ha ocurrido un problema." });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const { 
