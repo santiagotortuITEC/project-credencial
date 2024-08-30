@@ -56,13 +56,12 @@ export default function App({ navigation }) {
   const getData = async () => {
     try {
       const value = await AsyncStorage.getItem('veces')
-      if(value !== null) {
-        // value previously stored
-        //console.log('value : ', value)
+      if(value) {
         return value;
+      } else {
+        return 0;
       }
     } catch(e) {
-      // error reading value
       console.log('error en APP : ')
 
     }

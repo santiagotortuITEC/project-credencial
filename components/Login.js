@@ -7,8 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { url } from "../config/url_api"; 
 import ToggleSwitch from "toggle-switch-react-native";
 
-export default function Login({ route, navigation }) {  
-  //console.log('---> ',url)
+export default function Login({ navigation }) {  
   const { signIn } = React.useContext(AuthContext);
   
   const storeData = async (value) => {
@@ -26,7 +25,6 @@ export default function Login({ route, navigation }) {
       }
   
     } catch (e) {
-      // saving error
       //console.log('Error AsyncStorage:')
     }
   }
@@ -51,7 +49,6 @@ export default function Login({ route, navigation }) {
   },[]) 
 
   const getUsernameAsyncStorage = async () => {
-    // Function to get the value from AsyncStorage
     await AsyncStorage.getItem('infoLogin').then(
       (dataLogin) =>  
         dataLogin ?          
@@ -63,65 +60,78 @@ export default function Login({ route, navigation }) {
     ); 
   }; 
  
-  let clickSend = async () => {   
-    // Validaciones
-    if (username?.trim() === "" || password?.trim() === "") {
-      setValidateUsername(false)
-      setValidatePassword(false) 
-    }
-    
-    if (username.length > 0 && password.length > 0) {
-      setValidateAll({ state:true, msg:false})    
-      
-      setIsLoading(true);
-      await fetch(`${url}afiliadoactivo/${username}`).then(response => {
-        const contentType = response.headers.get('content-type'); 
-        return response.json();
-      })
-      .then(data => { 
-        if(data.response){
-          // Sigue activo, puede ingresar
-          sendLogin();
-        } else {
-          Alert.alert(
-            "Atención",
-            "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."  
-          ); 
-        }
-      })
-      .catch(error => console.error(error),
-        setValidateAll({ state:false, msg:" "})      
-      )
-      .finally(() => setIsLoading(false));
 
-    }else{ 
-      setValidateAll({ state:false, msg:"Hay campos incorrectos."})
-
-    }
-    
-    
-  }
-
-  const sendLogin = async () => {
-    await fetch(`${url}login/${username}/${password}`).then(response => {
-      const contentType = response.headers.get('content-type'); 
-      return response.json();
-    })
-    .then(data => { 
-      //console.log('data-   ',data)
-      if(data.response.length === 1) {
-
-        setValidateAll({ state:false, msg:data.response[0]})      
-      } else { 
-        signIn(data.response[1][0]);
-        // Siguientes parametros: 
-        // 0: para contar los inicios, y el resto para 'guardar' la sesion
-        storeData(0,username,password);  
+  const checkIfUserIsActive = async (username) => {
+    try {
+      const response = await fetch(`${url}afiliadoactivo/${username}`);
+      console.log('response: ', response);
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || 'Error verificando el usuario activo');
       }
-    })
-    .catch(error => console.error(error),
-      setValidateAll({ state:false, msg:" "})      
-    );
+  
+      return data.response;
+    } catch (error) {
+      setValidateAll({ state: false, msg: "Ha ocurrido un problema" });
+      throw error;
+    }
+  };
+  
+  const sendLogin = async () => {
+    try {
+      const response = await fetch(`${url}login/${username}/${password}`);
+      console.log('Response received:', response);
+  
+      const contentType = response.headers.get('content-type');
+      if (!contentType) {
+        throw new TypeError("Oops, we haven't got a valid content type!");
+      }  
+  
+      const data = await response.text();
+      const dataParsed = data ? JSON.parse(data) : {};
+      
+      if (dataParsed.response.length === 1) {
+        setValidateAll({ state: false, msg: dataParsed.response[0] });
+      } else {
+        signIn(dataParsed.response[1][0]);
+        storeData(0, username, password);
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      setValidateAll({ state: false, msg: "Ha ocurrido un error" });
+    }
+  };
+  
+  const clickSend = async () => {
+    // Validaciones
+    if (!username?.trim() || !password?.trim()) {
+      setValidateUsername(false);
+      setValidatePassword(false);
+      setValidateAll({ state: false, msg: "Hay campos incorrectos." });
+      return;
+    }
+  
+    setValidateAll({ state: true, msg: false });
+    setIsLoading(true);
+  
+    try {
+      const isActive = await checkIfUserIsActive(username);
+  
+      if (isActive) {
+        // Sigue activo, puede ingresar
+        await sendLogin();
+      } else {
+        Alert.alert(
+          "Atención",
+          "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
+        );
+      }
+    } catch (error) {
+      setValidateAll({ state: false, msg: "Ha ocurrido un problema." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const { 
@@ -152,7 +162,6 @@ export default function Login({ route, navigation }) {
             'username': username,
           })
         }
-        //onChangeText={(username) => this.changeUsername(username)}
       /> 
  
       {  validateUsername ? null : <Text style={ globalStyles.msgError}>Usuario no registrado</Text>}
@@ -172,7 +181,6 @@ export default function Login({ route, navigation }) {
           })
         }
         
-        //onChangeText={(password) => this.changePassword(password)}
         />
       {  validatePassword ? null : <Text style={ globalStyles.msgError}>Contraseña inválida</Text>}
       {  validateAll.state ? null : <Text style={ globalStyles.msgError}>{validateAll.msg}</Text>}
@@ -193,7 +201,7 @@ export default function Login({ route, navigation }) {
 
 
       <TouchableOpacity 
-        onPress={clickSend} 
+        onPress={() => clickSend()} 
         disabled={isLoading}
         style={loginButtonStyles}>
         <Text style={globalStyles.buttonLoginText}> 
