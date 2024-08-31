@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sindicato de la carne",
     "slug": "credencial",
-    "version": "4.0.0",
+    "version": "5.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "splash": {
@@ -17,10 +17,11 @@
       "**/*"
     ],
     "android": {
+      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA"
       ],
-      "versionCode": 12,
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#FFFFFF"
@@ -34,6 +35,16 @@
       "eas": {
         "projectId": "d4c20f51-2dcb-460b-b84b-e9360efaed06"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
   }
 }

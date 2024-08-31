@@ -1,14 +1,13 @@
  
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Button, Text, View, TextInput, ScrollView, TouchableHighlight, Alert , Switch} from 'react-native';  
+import { StyleSheet, Button, Text, View, TextInput, ScrollView, TouchableHighlight, Alert, TouchableOpacity} from 'react-native';  
 import { globalStyles } from './styles/global'; 
 import { AuthContext } from "./utils";
 import AsyncStorage from '@react-native-async-storage/async-storage';  
 import { url } from "../config/url_api"; 
 import ToggleSwitch from "toggle-switch-react-native";
 
-export default function Login({ route, navigation }) {  
-  //console.log('---> ',url)
+export default function Login({ navigation }) {  
   const { signIn } = React.useContext(AuthContext);
   
   const storeData = async (value) => {
@@ -26,7 +25,6 @@ export default function Login({ route, navigation }) {
       }
   
     } catch (e) {
-      // saving error
       //console.log('Error AsyncStorage:')
     }
   }
@@ -39,16 +37,18 @@ export default function Login({ route, navigation }) {
 
   const [validateUsername, setValidateUsername] = useState(true);
   const [validatePassword, setValidatePassword] = useState(true); 
-  const [loadDataRegister, setLoadDataRegister] = useState(true); 
+
+  const [isLoading, setIsLoading] = useState(false); 
+
   const [validateAll, setValidateAll] =  useState({  state: false, msg: "" });   
- 
+  
+  let loginButtonStyles = isLoading ? globalStyles.buttonLoginContainerDisabled : globalStyles.buttonLoginContainer;
   
   useEffect(()=>{ 
     getUsernameAsyncStorage();
   },[]) 
 
   const getUsernameAsyncStorage = async () => {
-    // Function to get the value from AsyncStorage
     await AsyncStorage.getItem('infoLogin').then(
       (dataLogin) =>  
         dataLogin ?          
@@ -59,69 +59,78 @@ export default function Login({ route, navigation }) {
         : null
     ); 
   }; 
- 
-  let clickSend = () => { 
- 
- 
-    // Validaciones
-    if (   username.trim() === "" ||  password.trim() === ""  ) {
-        setValidateUsername(false)
-        setValidatePassword(false) 
-    }
-    
 
 
-    if (validatePassword && validateUsername){
+  const checkIfUserIsActive = async (username) => {
+    try {
+      const response = await fetch(`${url}afiliadoactivo/${username}`);
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType) throw new TypeError("Oops, we haven't got a valid content type!");
       
-      setValidateAll({ state:true, msg:false})    
-
-      fetch(`${url}afiliadoactivo/${username}`).then(response => {
-        const contentType = response.headers.get('content-type'); 
-        return response.json();
-      })
-      .then(data => { 
-        if(data.response){
-          // Sigue activo, puede ingresar
-          sendLogin();
-        } else {
-          Alert.alert(
-            "Atención",
-            "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."  
-          ); 
-        }
-      })
-      .catch(error => console.error(error),
-        setValidateAll({ state:false, msg:" "})      
-      );
-
-    }else{ 
-      setValidateAll({ state:false, msg:"Hay campos incorrectos."})
-
-    }
-    
-    
-  }
-
-  const sendLogin = () => {
-    fetch(`${url}login/${username}/${password}`).then(response => {
-      const contentType = response.headers.get('content-type'); 
-      return response.json();
-    })
-    .then(data => { 
-      //console.log('data-   ',data)
-      if(data.response.length === 1) {
-
-        setValidateAll({ state:false, msg:data.response[0]})      
-      } else { 
-        signIn(data.response[1][0]);
-        // Siguientes parametros: 
-        // 0: para contar los inicios, y el resto para 'guardar' la sesion
-        storeData(0,username,password);  
+      const data = await response.text();
+      const dataParsed = data ? JSON.parse(data) : {};
+      
+      if (dataParsed.response) {
+        return dataParsed.response;
+      } else {
+        throw new Error(response.message || 'Error verificando el usuario activo')
       }
-    })
-    .catch(error => console.error(error),
-      setValidateAll({ state:false, msg:" "})      
-    );
+
+    } catch (error) {
+      setValidateAll({ state: false, msg: 'Ha ocurrido un problema' });
+      setIsLoading(false);
+    };
+  };
+  
+  const sendLogin = async () => {
+    try {
+      const response = await fetch(`${url}login/${username}/${password}`);
+  
+      const contentType = response.headers.get('content-type');
+      if (!contentType) {
+        throw new TypeError("Oops, we haven't got a valid content type!");
+      }  
+  
+      const data = await response.text();
+      const dataParsed = data ? JSON.parse(data) : {};
+      
+      if (dataParsed.response.length === 1) {
+        setValidateAll({ state: false, msg: dataParsed.response[0] });
+      } else {
+        signIn(dataParsed.response[1][0]);
+        storeData(0, username, password);
+      }
+    } catch (error) {
+      setValidateAll({ state: false, msg: "Ha ocurrido un error" });
+    } finally {
+      setIsLoading(false);
+      return;
+    }
+  };
+  
+  const clickSend = async () => {
+    // Validaciones
+    if (!username?.trim() || !password?.trim()) {
+      setValidateUsername(false);
+      setValidatePassword(false);
+      setValidateAll({ state: false, msg: "Hay campos incorrectos." });
+      return;
+    }
+  
+    setValidateAll({ state: true, msg: false });
+    
+    setIsLoading(true);
+    const isActive = await checkIfUserIsActive(username);
+    if (isActive) {
+      await sendLogin();
+    } else {
+      setIsLoading(false);
+      Alert.alert(
+        "Atención",
+        "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
+      );
+    }
   };
 
   const { 
@@ -152,7 +161,6 @@ export default function Login({ route, navigation }) {
             'username': username,
           })
         }
-        //onChangeText={(username) => this.changeUsername(username)}
       /> 
  
       {  validateUsername ? null : <Text style={ globalStyles.msgError}>Usuario no registrado</Text>}
@@ -172,7 +180,6 @@ export default function Login({ route, navigation }) {
           })
         }
         
-        //onChangeText={(password) => this.changePassword(password)}
         />
       {  validatePassword ? null : <Text style={ globalStyles.msgError}>Contraseña inválida</Text>}
       {  validateAll.state ? null : <Text style={ globalStyles.msgError}>{validateAll.msg}</Text>}
@@ -192,12 +199,14 @@ export default function Login({ route, navigation }) {
       </View>
 
 
-      <Button 
-        style={ globalStyles.button }
-        color="#043464" 
-        onPress={() => { clickSend() }}  
-          title="Ingresar"    
-      ></Button>
+      <TouchableOpacity 
+        onPress={() => clickSend()} 
+        disabled={isLoading}
+        style={loginButtonStyles}>
+        <Text style={globalStyles.buttonLoginText}> 
+          {isLoading ? "Ingresando..." : "Ingresar"} 
+        </Text>
+      </TouchableOpacity>
 
       <TouchableHighlight
         onPress={() => navigation.navigate('ChangePassword')}
