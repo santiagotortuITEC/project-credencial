@@ -121,21 +121,15 @@ export default function Login({ navigation }) {
     setValidateAll({ state: true, msg: false });
     
     setIsLoading(true);
-    try {
-      const isActive = await checkIfUserIsActive(username);
-      if (isActive) {
-        await sendLogin();
-      } else {
-        setIsLoading(false);
-        Alert.alert(
-            "Atención",
-            "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
-          );
-        }
-    } catch (error) {
-      setValidateAll({ state: false, msg: "Ha ocurrido un problema." });
-    } finally {
+    const isActive = await checkIfUserIsActive(username);
+    if (isActive) {
+      await sendLogin();
+    } else {
       setIsLoading(false);
+      Alert.alert(
+        "Atención",
+        "No se ha encontrado ningún afiliado activo vinculado al usuario ingresado."
+      );
     }
   };
 

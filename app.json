@@ -17,6 +17,7 @@
       "**/*"
     ],
     "android": {
+      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA"
       ],
@@ -34,6 +35,16 @@
       "eas": {
         "projectId": "d4c20f51-2dcb-460b-b84b-e9360efaed06"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
   }
 }
